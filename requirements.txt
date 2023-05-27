@@ -1,0 +1,13 @@
+Django==4.1.1
+django-extensions==3.2.1
+gunicorn
+requests
+bs4
+beautifulsoup4
+html5lib
+pymysql
+django-environ
+cryptography
+django-redis
+retrying
+discord.py
