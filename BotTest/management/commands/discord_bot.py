@@ -31,7 +31,10 @@ async def 十連抽(ctx):
 @bot.hybrid_command(name="ai")
 @app_commands.describe(question = "問題")
 async def ai(ctx, question):
-    await ctx.send(call_completions(question))
+    # 超過3秒未回覆會報錯，需先用ctx.defer()延遲回覆
+    await ctx.defer()
+    message = call_completions(question)
+    await ctx.send(message)
 
 class Command(BaseCommand):
     help = "Run a discord bot"

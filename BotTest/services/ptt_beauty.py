@@ -1,6 +1,4 @@
 import random
-import json
-from copy import deepcopy
 from retrying import retry
 from ..models import Photo
 
