@@ -1,5 +1,5 @@
 # 安裝套件
-`pip install -r requirement.txt`
+`pip install -r requirements.txt`
 
 # 設定環境變數
 `cp .env.example .env`
