@@ -1,10 +1,11 @@
 from django.core.management.base import BaseCommand
 from django.conf import settings
-from BotTest.services.ptt_beauty import get_beauty_imgs, dc_beauty_message
-from BotTest.services.open_ai import call_completions
 import discord
 from discord import app_commands
 from discord.ext import commands
+from BotTest.services.ptt_beauty import get_beauty_imgs, dc_beauty_message
+from BotTest.services.open_ai import call_completions
+from BotTest.services.gemini_service import create_image, edit_image
 
 bot = commands.Bot(command_prefix=commands.when_mentioned_or('!', '！'), intents=discord.Intents.all())
 
@@ -34,6 +35,59 @@ async def ai(ctx, question):
     await ctx.defer()
     message = call_completions(question)
     await ctx.send(message)
+
+@bot.hybrid_command(name="生圖")
+@app_commands.describe(prompt="提示詞")
+async def create_photo(ctx, prompt: str):
+    await ctx.defer()
+    image_path = await create_image(prompt)
+    if image_path:
+        await ctx.send(file=discord.File(image_path))
+    else:
+        await ctx.send("圖片生成失敗，請稍後再試。")
+
+
+@bot.hybrid_command(name="修圖")
+@app_commands.describe(prompt="修改提示詞")
+async def edit_photo(ctx, prompt: str):
+    await ctx.defer()
+    attachment = None
+    original_msg = None
+
+    # 檢查當前訊息是否有圖片附件
+    if hasattr(ctx.message, 'attachments') and ctx.message.attachments:
+        attachment = next((att for att in ctx.message.attachments
+                            if att.content_type and att.content_type.startswith('image/')), None)
+
+    # 如果當前訊息沒有圖片，從歷史記錄尋找
+    if not attachment:
+        messages = [msg async for msg in ctx.channel.history(limit=10)]
+        for msg in messages:
+            if msg.attachments:
+                img_att = next((att for att in msg.attachments
+                                if att.content_type and att.content_type.startswith('image/')), None)
+                if img_att:
+                    attachment = img_att
+                    original_msg = msg
+                    break
+
+    if not attachment:
+        await ctx.send("找不到最近上傳的圖片，請先上傳一張圖片！")
+        return
+
+    # 讀取圖片數據
+    image_bytes = await attachment.read()
+
+    # 使用Gemini API處理圖片
+    image_path = await edit_image(image_bytes, prompt)
+
+    if image_path:
+        # 如果是從歷史記錄找到的圖片，顯示原始圖片連結
+        if original_msg:
+            await ctx.send(f"原始圖片: {original_msg.jump_url}")
+        await ctx.send(file=discord.File(image_path))
+    else:
+        await ctx.send("圖片處理失敗，請稍後再試。")
 
 class Command(BaseCommand):
     help = "Run a discord bot"

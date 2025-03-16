@@ -12,3 +12,5 @@ django-redis
 retrying
 discord.py
 audioop-lts
+google-genai
+Pillow

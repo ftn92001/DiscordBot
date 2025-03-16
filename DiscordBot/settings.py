@@ -161,3 +161,6 @@ OPEN_AI_API_KEY = os.environ.get('OPEN_AI_API_KEY', default=env('OPEN_AI_API_KEY
 
 # Discord BOT TOKEN
 DISCORD_TOKEN = os.environ.get('DISCORD_TOKEN', default=env('DISCORD_TOKEN'))
+
+# Gemini API
+GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY', default=env('GEMINI_API_KEY'))
