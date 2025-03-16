@@ -1,6 +1,7 @@
 import random
+import discord
 from retrying import retry
-from ..models import Photo
+from BotTest.models import Photo
 
 def get_beauty_imgs(amount):
     imgs = []
@@ -37,5 +38,12 @@ def get_someone_beauty_imgs(amount, query=None):
     return imgs, texts, urls
 
 def dc_beauty_message(imgs, texts, urls):
-    arr = [f"{texts[i]} {urls[i]} \n {imgs[i] }" for i in range(len(imgs))]
-    return "\n".join(arr)
+    embeds = []
+    for img, text, url in zip(imgs, texts, urls):
+        embed = discord.Embed(
+            title=text,
+            url=url,
+        )
+        embed.set_image(url=img)
+        embeds.append(embed)
+    return embeds

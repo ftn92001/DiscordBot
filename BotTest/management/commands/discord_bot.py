@@ -19,14 +19,13 @@ async def on_ready():
 
 @bot.hybrid_command(name="正妹")
 async def 正妹(ctx):
-    imgs, texts, urls = get_beauty_imgs(1)
-    await ctx.send(dc_beauty_message(imgs, texts, urls))
+    embeds = dc_beauty_message(*get_beauty_imgs(1))
+    await ctx.send(embeds=embeds)
 
 @bot.hybrid_command(name="十連抽")
 async def 十連抽(ctx):
-    for _ in range(10):
-        imgs, texts, urls = get_beauty_imgs(1)
-        await ctx.send(dc_beauty_message(imgs, texts, urls))
+    embeds = dc_beauty_message(*get_beauty_imgs(10))
+    await ctx.send(embeds=embeds)
 
 @bot.hybrid_command(name="ai")
 @app_commands.describe(question = "問題")

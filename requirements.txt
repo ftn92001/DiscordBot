@@ -11,3 +11,4 @@ cryptography
 django-redis
 retrying
 discord.py
+audioop-lts
