@@ -11,7 +11,7 @@ async def edit_image(image_bytes: bytes, prompt: str):
     try:
         # 將bytes轉換為PIL Image
         image = Image.open(BytesIO(image_bytes))
-        
+
         response = client.models.generate_content(
             model="models/gemini-2.0-flash-exp",
             contents=[

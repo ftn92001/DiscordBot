@@ -40,9 +40,12 @@ async def ai(ctx, question):
 @app_commands.describe(prompt="提示詞")
 async def create_photo(ctx, prompt: str):
     await ctx.defer()
+    processing_msg = await ctx.send(f"正在生圖: {prompt}")
+
     image_path = await create_image(prompt)
+    await processing_msg.delete()
     if image_path:
-        await ctx.send(file=discord.File(image_path))
+        await ctx.send(prompt, file=discord.File(image_path))
     else:
         await ctx.send("圖片生成失敗，請稍後再試。")
 
@@ -75,17 +78,21 @@ async def edit_photo(ctx, prompt: str):
         await ctx.send("找不到最近上傳的圖片，請先上傳一張圖片！")
         return
 
+    if original_msg:
+        await ctx.send(f"原始圖片: {original_msg.jump_url}\n")
+
+    processing_msg = await ctx.send(f"正在修圖: {prompt}")
+
     # 讀取圖片數據
     image_bytes = await attachment.read()
 
     # 使用Gemini API處理圖片
     image_path = await edit_image(image_bytes, prompt)
 
+
+    await processing_msg.delete()
     if image_path:
-        # 如果是從歷史記錄找到的圖片，顯示原始圖片連結
-        if original_msg:
-            await ctx.send(f"原始圖片: {original_msg.jump_url}")
-        await ctx.send(file=discord.File(image_path))
+        await ctx.send(prompt, file=discord.File(image_path))
     else:
         await ctx.send("圖片處理失敗，請稍後再試。")
 
