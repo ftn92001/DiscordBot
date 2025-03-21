@@ -7,6 +7,7 @@ from discord.ext import commands
 from BotTest.services.ptt_beauty import get_beauty_imgs, dc_beauty_message
 from BotTest.services.open_ai import call_completions
 from BotTest.services.gemini_service import create_image, edit_image
+from BotTest.services.views import RetryView
 
 bot = commands.Bot(command_prefix=commands.when_mentioned_or('!', '！'), intents=discord.Intents.all())
 
@@ -22,12 +23,14 @@ async def on_ready():
 @bot.hybrid_command(name="正妹")
 async def 正妹(ctx):
     embeds = dc_beauty_message(*get_beauty_imgs(1))
-    await ctx.send(embeds=embeds)
+    view = RetryView(ctx)
+    await ctx.send(embeds=embeds, view=view)
 
 @bot.hybrid_command(name="十連抽")
 async def 十連抽(ctx):
     embeds = dc_beauty_message(*get_beauty_imgs(10))
-    await ctx.send(embeds=embeds)
+    view = RetryView(ctx)
+    await ctx.send(embeds=embeds, view=view)
 
 @bot.hybrid_command(name="ai")
 @app_commands.describe(question = "問題")
@@ -35,25 +38,26 @@ async def ai(ctx, question):
     # 超過3秒未回覆會報錯，需先用ctx.defer()延遲回覆
     await ctx.defer()
     message = call_completions(question)
-    await ctx.send(message)
+    view = RetryView(ctx, question=question)
+    await ctx.send(message, view=view)
 
 @bot.hybrid_command(name="生圖")
 @app_commands.describe(prompt="提示詞")
 async def create_photo(ctx, prompt: str):
     await ctx.defer()
     processing_msg = await ctx.send(f"正在生圖: {prompt}")
-
+    view = RetryView(ctx, prompt=prompt)
     image_path = await create_image(prompt, str(ctx.author.id))
     await processing_msg.delete()
     if image_path:
-        await ctx.send(prompt, file=discord.File(image_path))
+        await ctx.send(prompt, file=discord.File(image_path), view=view)
         # 刪除臨時檔案
         try:
             os.remove(image_path)
         except Exception as e:
             print(f"刪除臨時檔案失敗：{str(e)}")
     else:
-        await ctx.send("圖片生成失敗，請稍後再試。")
+        await ctx.send("圖片生成失敗，請稍後再試。", view=view)
 
 @bot.hybrid_command(name="修圖")
 @app_commands.describe(prompt="修改提示詞")
@@ -61,6 +65,7 @@ async def edit_photo(ctx, prompt: str):
     await ctx.defer()
     attachment = None
     original_msg = None
+    view = RetryView(ctx, prompt=prompt)
 
     # 檢查當前訊息是否有圖片附件
     if hasattr(ctx.message, 'attachments') and ctx.message.attachments:
@@ -96,14 +101,14 @@ async def edit_photo(ctx, prompt: str):
 
     await processing_msg.delete()
     if image_path:
-        await ctx.send(prompt, file=discord.File(image_path))
+        await ctx.send(prompt, file=discord.File(image_path), view=view)
         # 刪除臨時檔案
         try:
             os.remove(image_path)
         except Exception as e:
             print(f"刪除臨時檔案失敗：{str(e)}")
     else:
-        await ctx.send("圖片處理失敗，請稍後再試。")
+        await ctx.send("圖片處理失敗，請稍後再試。", view=view)
 
 class Command(BaseCommand):
     help = "Run a discord bot"
